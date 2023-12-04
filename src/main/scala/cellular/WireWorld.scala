@@ -17,10 +17,47 @@ class WireWorld(val map: CellMap) extends CellAutomata(WireWorld.rule):
 
   def createNew(map: CellMap): WireWorld = new WireWorld(map)
 
-  def setStateAt(x: Int, y: Int, state: CellState): WireWorld = ???
+  def setStateAt(x: Int, y: Int, state: CellState): WireWorld = {
+    val newGrids = map.grids.updated(x,map.grids(x).updated(y,state))
+    createNew(CellMap(map.size,newGrids))
+  }
 
-  def neighborsAt(x: Int, y: Int): Iterable[CellState] = ???
+  val cellStates = Vector(
+      CellState("empty", 0),
+      CellState("conductor", 1),
+      CellState("electron_head", 2),
+      CellState("electron_tail", 3)
+    )
 
+  def neighborsAt(x: Int, y: Int): Iterable[CellState] = {
+    
+    if (x == 0) then {
+      if (y == 0) then map.grids(x + 1)(y) :: map.grids(x)(y + 1) :: map.grids(x + 1)(y + 1) :: Nil
+      else if (y == map.size._2 - 1) then {
+        map.grids(x + 1)(y) :: map.grids(x + 1)(y - 1) :: map.grids(x)(y - 1) :: Nil
+      }
+      else {
+        map.grids(x + 1)(y) :: map.grids(x)(y + 1) :: map.grids(x + 1)(y + 1) ::
+        map.grids(x + 1)(y - 1) :: map.grids(x)(y - 1) :: Nil
+      }
+    }
+    else if (y == 0) then {
+      if (x == map.size._1 - 1) then map.grids(x - 1)(y) :: map.grids(x - 1)(y + 1) :: map.grids(x)(y + 1) :: Nil
+      else map.grids(x + 1)(y) :: map.grids(x)(y + 1) :: map.grids(x + 1)(y + 1) :: map.grids(x - 1)(y) :: map.grids(x - 1)(y + 1) :: Nil
+    }
+    else if (y == map.size._2 -1) then {
+      if (x == map.size._1 - 1) then map.grids(x - 1)(y) :: map.grids(x - 1)(y - 1) :: map.grids(x)(y - 1) :: Nil
+      else map.grids(x + 1)(y) :: map.grids(x)(y - 1) :: map.grids(x + 1)(y - 1) :: map.grids(x - 1)(y - 1) :: map.grids(x - 1)(y) :: Nil
+    }
+    else if (x == map.size._1 -1) then {
+      map.grids(x - 1)(y) :: map.grids(x - 1)(y - 1) :: map.grids(x - 1)(y + 1) :: map.grids(x)(y -1) :: map.grids(x)(y + 1) :: Nil
+    }
+    else {
+      map.grids(x - 1)(y - 1) :: map.grids(x - 1)(y) :: map.grids(x - 1)(y + 1) ::
+      map.grids(x)(y - 1) :: map.grids(x)(y + 1) ::
+      map.grids(x + 1)(y - 1) :: map.grids(x + 1)(y) ::map.grids(x + 1)(y + 1) :: Nil
+    }
+  }
 object WireWorld:
   def initMap(height: Int, width: Int): CellMap =
     CellMap(
@@ -38,7 +75,20 @@ object WireWorld:
       CellState("electron_tail", 3)
     )
     val defaultState = cellStates(0)
+
     def nextState(
         currState: CellState,
         neighborsStates: Iterable[CellState]
-    ): CellState = ???
+    ): CellState = {
+      val neighbors = neighborsStates.map(_.index).toList
+      currState.index match {
+        case 0 => cellStates(0) 
+        case 1 => {
+          if (neighbors.count(_ == 2) == 1) || (neighbors.count(_ == 2) == 2) then cellStates(2) 
+          else cellStates(1)
+        }
+        case 2 => cellStates(3)
+        case 3 => cellStates(1)
+        case _ => cellStates(0)
+      }
+    }

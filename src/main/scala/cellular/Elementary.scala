@@ -95,8 +95,22 @@ object Elementary:
     *   The rule code. (0 <= ruleCode <= 255)
     */
   def createRule(ruleCode: Int): CellRule = new BaseRule {
+    
     def nextState(
         currState: CellState,
         neighborsStates: Iterable[CellState]
-    ): CellState = ???
+    ): CellState = {
+      val neighbors = neighborsStates.map(_.name.toInt).toList
+      neighbors match {
+        case 0 :: 0 :: 0 :: Nil => cellStates(ruleCode & 1)
+        case 0 :: 0 :: 1 :: Nil => cellStates((ruleCode >> 1) & 1)
+        case 0 :: 1 :: 0 :: Nil => cellStates((ruleCode >> 2) & 1)
+        case 0 :: 1 :: 1 :: Nil => cellStates((ruleCode >> 3) & 1)
+        case 1 :: 0 :: 0 :: Nil => cellStates((ruleCode >> 4) & 1)
+        case 1 :: 0 :: 1 :: Nil => cellStates((ruleCode >> 5) & 1)
+        case 1 :: 1 :: 0 :: Nil => cellStates((ruleCode >> 6) & 1)
+        case 1 :: 1 :: 1 :: Nil => cellStates((ruleCode >> 7) & 1)
+        case _                  => cellStates(0)
+      }
+    }
   }
